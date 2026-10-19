@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Countryside City - Preview</title>
+<style>
+:root{--ink:#19332b;--green:#2e7654;--lime:#c9ed8c;--cream:#fffaf0;--glass:rgba(255,250,240,.94);--shadow:0 8px 26px #173c2b22}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,ui-rounded,system-ui,-apple-system,sans-serif;color:var(--ink);background:#bde5f5}
+button{font:inherit;cursor:pointer;border:0}#game{position:fixed;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}
+.topbar{position:fixed;top:12px;left:12px;right:12px;display:flex;gap:10px;align-items:flex-start;pointer-events:none;z-index:5}
+.brand,.stat,.pill,.panel{background:var(--glass);backdrop-filter:blur(12px);border:1px solid #fff9;box-shadow:var(--shadow);border-radius:18px}
+.brand{padding:10px 14px;min-width:170px}.brand strong{font-size:18px;letter-spacing:-.5px;display:block}.brand small{color:#648074;font-size:11px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}.stat{padding:10px 13px;min-width:98px}.stat label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#668074;font-weight:800}.stat b{font-size:17px}
+.top-actions{margin-left:auto;display:flex;gap:7px;pointer-events:auto}.pill{padding:10px 13px;color:var(--ink);font-weight:800;pointer-events:auto;display:flex;align-items:center;gap:6px;}
+.side-toggle{position:fixed;left:0;top:45%;z-index:10;background:var(--green);color:white;width:32px;height:66px;border-radius:0 14px 14px 0;box-shadow:var(--shadow);font-size:22px}
+.panel{position:fixed;z-index:8;padding:14px;max-height:calc(100vh - 108px);overflow:auto;transition:transform .25s ease,opacity .25s ease}
+#buildPanel{left:12px;top:100px;bottom:12px;width:300px;transform:translateX(-120%);opacity:0;pointer-events:none}
+#buildPanel.open{transform:translateX(0);opacity:1;pointer-events:auto}
+#rightPanel{right:12px;top:100px;width:270px;max-height:calc(100vh - 112px)}
+.panel h2{font-size:17px;margin:0 0 4px}.sub{font-size:12px;color:#6d8377;margin-bottom:12px;line-height:1.4}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}.tab{background:#e8f0e5;color:#42604e;border-radius:10px;padding:7px 9px;font-size:11px;font-weight:800}.tab.active{background:var(--green);color:white}
+.building{display:flex;align-items:center;gap:10px;background:#fffdf8;border:1px solid #e4e9dd;border-radius:13px;padding:9px;margin:7px 0;width:100%;text-align:left;color:var(--ink)}
+.building:hover{border-color:#8dbb89;transform:translateY(-1px)}.emoji{width:40px;height:40px;display:grid;place-items:center;background:#edf4e7;border-radius:11px;font-size:24px;flex-shrink:0}.binfo{flex:1;min-width:0}.binfo strong{display:block;font-size:12px}.binfo small{display:block;font-size:10px;color:#738779;margin-top:3px}.price{font-size:11px;font-weight:900;white-space:nowrap}
+.section-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:#6b8374;margin:14px 0 7px}
+.wish{padding:9px 0;border-bottom:1px solid #e5e9df}.wishhead{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:800}.wish small{font-size:10px;color:#7b8e82}.progress{height:6px;background:#e3eadf;border-radius:999px;margin-top:7px;overflow:hidden}.progress span{display:block;height:100%;background:#75b96b;border-radius:999px}
+.mood{background:#edf4e7;padding:10px;border-radius:13px;font-size:12px;line-height:1.5}.mood b{font-size:15px}.bottom-hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#17382fc9;color:#fff;padding:8px 13px;border-radius:999px;font-size:11px;pointer-events:none;white-space:nowrap;z-index:4}
+#toast{position:fixed;z-index:20;top:82px;left:50%;transform:translate(-50%,-10px);opacity:0;transition:.2s;background:#19382e;color:white;padding:11px 16px;border-radius:13px;font-size:13px;font-weight:800;pointer-events:none;box-shadow:var(--shadow)}#toast.show{opacity:1;transform:translate(-50%,0)}
+#inspect{display:none;position:fixed;z-index:9;bottom:52px;left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 24px));background:var(--glass);backdrop-filter:blur(12px);border-radius:18px;padding:14px;box-shadow:var(--shadow);border:1px solid white}
+#inspect h3{margin:0 0 5px;font-size:16px}#inspect p{font-size:12px;color:#6b8074;margin:4px 0 10px}.inspect-actions{display:flex;gap:7px;flex-wrap:wrap}.action{background:#e7f0e3;color:#214b35;border-radius:10px;padding:9px 11px;font-size:12px;font-weight:900}.action.primary{background:var(--green);color:white}.action.danger{background:#fae5dc;color:#8d3926}
+#overlay{position:fixed;inset:0;background:#17372c66;z-index:30;display:none;align-items:center;justify-content:center;padding:20px}.modal{background:var(--cream);border-radius:22px;padding:22px;max-width:420px;width:100%;box-shadow:var(--shadow)}.modal h2{margin:0 0 7px}.modal p{font-size:13px;line-height:1.5;color:#5f7568}.modal button{background:var(--green);color:white;padding:10px 14px;border-radius:12px;font-weight:900;margin-top:8px}
+.road-hint{color:#648074;font-style:italic}
+@media(max-width:760px){.topbar{top:7px;left:7px;right:7px;gap:5px;flex-wrap:wrap}.brand{min-width:0;padding:8px 10px}.brand strong{font-size:15px}.brand small{display:none}.stats{gap:5px}.stat{min-width:75px;padding:7px 9px;border-radius:13px}.stat b{font-size:14px}.stat label{font-size:8px}.top-actions{gap:4px}.pill{padding:8px 9px;font-size:11px}#rightPanel{right:7px;top:auto;bottom:50px;width:210px;max-height:37vh;padding:11px}#rightPanel .sub{display:none}#buildPanel{top:105px;bottom:8px;left:7px;width:min(290px,85vw);max-height:none}#buildPanel.open{transform:translateX(0)}.bottom-hint{bottom:8px;font-size:10px}#inspect{bottom:42px}.side-toggle{top:48%}}
+/* Demolish mode style */
+body.demolish-mode{cursor:cell}
+#gameCanvas.demolish-cursor{cursor:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23e87b66" d="M19.5 6H16c-.3-.8-1-1.5-2-1.5h-4c-1 0-1.7.7-2 1.5H4.5c-.3 0-.5.2-.5.5s.2.5.5.5h15c.3 0 .5-.2.5-.5s-.2-.5-.5-.5Zm-12 11.5a.5.5 0 0 0 .5.5H16a.5.5 0 0 0 .5-.5V8h-9v9.5Z"/></svg>') 12 12, crosshair!important}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div class="topbar">
+  <div class="brand"><strong>🌿 Countryside City</strong><small>Preview Update 2.1</small></div>
+  <div class="stats">
+    <div class="stat"><label>Geld</label><b id="money">€ 2.500</b></div>
+    <div class="stat"><label>Inkomsten</label><b id="income">€ 0/s</b></div>
+    <div class="stat"><label>Inwoners</label><b id="population">0</b></div>
+    <div class="stat"><label>Stadslevel</label><b id="level">1 · Dorp</b></div>
+  </div>
+  <div class="top-actions">
+    <button class="pill" id="demolishModeBtn" title="Slopen (Krijg 50% terug)">🧹 Slopen: OFF</button>
+    <button class="pill" id="cameraHome" title="Camera terugzetten">⌂ Camera</button>
+  </div>
+</div>
+<button class="side-toggle" id="toggleBuild" aria-label="Bouwmenu openen">❯</button>
+<aside class="panel" id="buildPanel">
+  <h2>🏗️ Bouw je stad</h2><div class="sub">Kies een gebouw en klik daarna op vrije vakjes in de grid om te bouwen. Elk gebouw en elke weg past nu exact in 1 vakje.</div>
+  <div class="tabs" id="tabs"></div><div id="buildingList"></div>
+  <div class="section-title">Geselecteerd bouwtype</div><div class="mood" id="buildHelp">Kies een gebouw om te beginnen.</div>
+</aside>
+<aside class="panel" id="rightPanel">
+  <h2>🗣️ Burgerwensen</h2><div class="sub">Houd je burgers blij.</div>
+  <div class="mood" id="happiness"><b>😊 Tevredenheid: 75%</b><br>Je stad begint rustig. Bouw woningen en voorzieningen!</div>
+  <div class="section-title">Actieve doelen</div><div id="wishes"></div>
+  <div class="section-title">Stadsnieuws</div><div id="news" class="mood">Welkom, burgemeester! Bouw je eerste huis.</div>
+</aside>
+<div id="inspect"></div><div class="bottom-hint" id="hint">Sleep om rond te kijken · scroll/pinch om te zoomen · klik op een gebouw om details te zien</div>
+<div id="toast"></div>
+<div id="overlay"><div class="modal"><h2>🌱 Welkom in Countryside City!</h2><p>Dit is een preview van de update. De grid is verbeterd: huisjes passen nu precies op 1 vakje en ook wegen sluiten netjes aan. Je kunt nu ook gebouwen en wegen **slopen** via het borstel-icoontje bovenaan; je krijgt dan 50% van de bouwprijs terug. De inkomsten zijn verhoogd en je kunt beloningen van burgerwensen nu echt **claimen**. Veel plezier met bouwen!</p><button id="startGame">Aan de slag!</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const fmt = n => '€ ' + Math.floor(n).toLocaleString('nl-NL');
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+let money=2500, xp=0, level=1, selectedType=null, selectedObject=null, placing=false, demolishMode=false, lastTime=performance.now(), elapsed=0, happiness=75, dayPhase=0;
+let buildings=[], people=[], trees=[], category='Woningen', nextId=1;
+const categories=['Woningen','Winkels','Voorzieningen','Bedrijven','Wegen & Groen'];
+const catalog=[
+{id:'cottage',name:'Klein huisje',cat:'Woningen',emoji:'🏡',cost:500,pop:4,inc:15,size:1,desc:'Een knus huis. Past nu perfect op 1 vakje.',color:0xf2c879,kind:'house'},
+{id:'family',name:'Grote gezinswoning',cat:'Woningen',emoji:'🏠',cost:1500,pop:10,inc:40,size:1,desc:'Een ruime woning. Neemt 1 vakje in.',color:0xe6a77c,kind:'house'},
+{id:'flat',name:'Appartementenflat',cat:'Woningen',emoji:'🏢',cost:5000,pop:12,inc:60,size:1,desc:'Hoogbouw. Breid uit met verdiepingen. Neemt 1 vakje in.',color:0xe8b1a0,kind:'flat'},
+{id:'supermarket',name:'Supermarkt',cat:'Winkels',emoji:'🛒',cost:3000,pop:0,inc:120,size:1,desc:'Een dagelijkse boodschap dichtbij huis.',color:0x8fc6a0,kind:'shop'},
+{id:'clothes',name:'Kledingwinkel',cat:'Winkels',emoji:'👕',cost:2500,pop:0,inc:90,size:1,desc:'Een leuke winkelstraat begint hier.',color:0x9db6e6,kind:'shop'},
+{id:'restaurant',name:'Restaurant',cat:'Winkels',emoji:'🍽️',cost:4000,pop:0,inc:160,size:1,desc:'Lekker uit eten in je eigen stad.',color:0xd99a83,kind:'shop'},
+{id:'park',name:'Stadspark',cat:'Wegen & Groen',emoji:'🌳',cost:900,pop:0,inc:0,size:1,desc:'Groen verhoogt de tevredenheid.',color:0x67b875,kind:'park'},
+{id:'school',name:'School',cat:'Voorzieningen',emoji:'🏫',cost:5000,pop:0,inc:25,size:1,desc:'Goed onderwijs voor jonge inwoners.',color:0xe5c96c,kind:'civic'},
+{id:'police',name:'Politiebureau',cat:'Voorzieningen',emoji:'🚓',cost:6000,pop:0,inc:0,size:1,desc:'Houd de stad veilig.',color:0x9cb8d9,kind:'civic'},
+{id:'office',name:'Kantoor',cat:'Bedrijven',emoji:'🏢',cost:7500,pop:0,inc:320,size:1,desc:'Werkgelegenheid en belastinginkomsten.',color:0x9abbd0,kind:'office'},
+{id:'factory',name:'Fabriek',cat:'Bedrijven',emoji:'🏭',cost:9000,pop:0,inc:450,size:1,desc:'Veel inkomsten, maar minder gezellig.',color:0xb2b7b5,kind:'factory'},
+{id:'road',name:'Weg',cat:'Wegen & Groen',emoji:'🛣️',cost:100,pop:0,inc:0,size:1,desc:'Plaats wegen om gebouwen te ontsluiten.',color:0x646f70,kind:'road'},
+{id:'tree',name:'Boomgroep',cat:'Wegen & Groen',emoji:'🌲',cost:150,pop:0,inc:0,size:1,desc:'Maak je landschap groener.',color:0x4f9c65,kind:'tree'}
+];
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xb9e4f5);scene.fog=new THREE.Fog(0xb9e4f5,45,105);
+const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,250);camera.position.set(22,25,30);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;renderer.domElement.id='gameCanvas';$('game').appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xeaf8ff,0x71865a,2.0));
+const sun=new THREE.DirectionalLight(0xfff0d2,2.6);sun.position.set(-20,35,18);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-40;sun.shadow.camera.right=40;sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;scene.add(sun);
+const mat=(color,roughness=.85)=>new THREE.MeshStandardMaterial({color,roughness});
+const grassMat=mat(0x91c879), trunkMat=mat(0x805a39), leafMat=mat(0x3f9257);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(150,150),grassMat);ground.rotation.x=-Math.PI/2;ground.position.y=-.01;ground.receiveShadow=true;scene.add(ground);
+const grid=new THREE.Group();grid.position.y=.01;scene.add(grid);
+// GRID IS IMPROVED TO 1x1 size lines
+const gridSize=30, gridLines=gridSize*2; // Total grid size, total number of grid lines
+for(let i=-gridSize;i<=gridSize;i++){let line=new THREE.Mesh(new THREE.BoxGeometry(.025,.012,gridLines),mat(0x79b76c));line.position.set(i,0,0);grid.add(line);let line2=new THREE.Mesh(new THREE.BoxGeometry(gridLines,.012,.025),mat(0x79b76c));line2.position.set(0,-.001,i);grid.add(line2)}
+const world=new THREE.Group();scene.add(world);
+function box(parent,w,h,d,color,x,y,z,cast=true){let m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m}
+function roof(parent,w,h,d,color,x,y,z){let geo=new THREE.ConeGeometry(Math.max(w,d)*.78,h,4);let m=new THREE.Mesh(geo,mat(color));m.rotation.y=Math.PI/4;m.scale.z=d/w;m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m}
+function windowBox(parent,x,y,z,scale=1){box(parent,.22*scale,.3*scale,.035,0x9ad7e8,x,y,z,false)}
+function makeBuildingMesh(type,x,z,floors=1){let def=catalog.find(a=>a.id===type),g=new THREE.Group();
+const scaleFactor = 0.88; // Uniform scale to fit perfectly within 1x1 grid cell
+if(type==='tree'){for(let i=0;i<3;i++){let t=new THREE.Group();let tr=new THREE.Mesh(new THREE.CylinderGeometry(.1,.15,.7,7),trunkMat);tr.position.y=.35; t.add(tr);let lf=new THREE.Mesh(new THREE.ConeGeometry(.55,1,7),leafMat);lf.position.y=.95;t.add(lf);t.position.set((i-1)*.28,0,(i%2)*.15);g.add(t)}}
+else if(type==='road'){let roadG=new THREE.Group();box(roadG,1, .06,1, 0x646d70, 0,.03,0, false);box(roadG,.07,.012,.35,0xf3e9c4,0,.062,0,false);box(roadG,.07,.012,.35,0xf3e9c4,0,.062,.5,false);box(roadG,.07,.012,.35,0xf3e9c4,0,.062,-.5,false);g.add(roadG)}
+else if(type==='park'){box(g,.9,.08,.9,0x67b875,0,.04,0,false);for(const [tx,tz] of [[-.25,-.2],[.25,.18]]){let tr=box(g,.07,.28,.07,0x805a39,tx,.18,tz);let lf=new THREE.Mesh(new THREE.SphereGeometry(.22,8,7),leafMat);lf.position.set(tx,.42,tz);lf.castShadow=true;g.add(lf)}box(g,.3,.06,.15,0xd8c59b,.08,.11,-.1,false)}
+else if(['house'].includes(def.kind)){let h=def.id==='cottage'?.95:1.15,w=.85,d=.78;box(g,w,h,d,def.color,0,h/2,0);roof(g,w,.6,d,def.color,0,h+.22,0);box(g,.24,.48,.07,0x76503d,0,.24,d/2+.01,false);windowBox(g,-.24,.6,d/2+.015,.7);windowBox(g,.24,.6,d/2+.015,.7)}
+else if(type==='flat'){let h=1.0+(floors-2)*.35;box(g,.88,h,.88,0xd9b8a0,0,h/2,0);for(let f=0;f<floors;f++){let yy=.2+f*.35;for(let xx of [-.28,0,.28])windowBox(g,xx,yy, .445,.6)}box(g,.95,.1,.95,0xb2aaa0,0,.05,0,false);box(g,.95,.08,.95,0x8f9e9e,0,h,0,false)}
+else if(def.kind==='shop'){let h=.9;box(g,.95,h,.95,def.color,0,h/2,0);box(g,.98,.18,1.0,0xf1e9d9,0,h-.08,0);box(g,.45,.34,.05,0x5f8990,0,.32,.48,false);box(g,.6,.08,.12,0xeee5d3,0,.7,.5,false);for(let xx of [-.32,.32])box(g,.06,.4,.06,0xf4e6c8,xx,.22,.49,false)}
+else if(def.kind==='civic'){box(g,.9,1.0,.9,def.color,0,.5,0);roof(g,.95,.28,.95,0x9b5c4a,0,1.1,0);box(g,.3,.45,.05,0x5c858e,0,.24,.46,false);if(type==='hospital')box(g,.1,.45,.06,0xe65f57,0,.8,.47,false);else if(type==='school')box(g,.4,.16,.06,0xf5efda,0,.85,.47,false)}
+else if(def.kind==='office'||def.kind==='factory'){let h=1.5;box(g,.85,h,.85,def.color,0,h/2,0);for(let yy=.35;yy<h;yy+=.38)for(let xx of [-.3,0,.3])windowBox(g,xx,yy,.43,.6);if(type==='factory'){box(g,.2,.7,.2,0x999f9e,.3,1.45,-.25);box(g,.18,.4,.18,0xb7bfbd,.3,2.0,-.25)}}g.scale.setScalar(scaleFactor); g.position.set(x,0,z);g.userData={type,x,z,floors,buildingId:nextId++};world.add(g);return g}
+function addBuilding(type,x,z,fromSave=null){let floors=fromSave?.floors||2;if(type==='flat'&&floors<2)floors=2;let mesh=makeBuildingMesh(type,x,z,floors);let b={id:mesh.userData.buildingId,type,x,z,floors,mesh};buildings.push(b);return b}
+function removeBuilding(b){let def=catalog.find(a=>a.id===b.type);world.remove(b.mesh);buildings=buildings.filter(x=>x.id!==b.id);xp-=Math.floor(def.cost/20);updateWishes()}
+function rebuildBuilding(b){world.remove(b.mesh);b.mesh=makeBuildingMesh(b.type,b.x,b.z,b.floors);b.mesh.userData.buildingId=b.id}
+function totals(){let pop=0,inc=0;buildings.forEach(b=>{let d=catalog.find(a=>a.id===b.type);if(b.type==='flat'){pop+=8*b.floors;inc+=40*b.floors}else{pop+=d.pop;inc+=d.inc}});return {pop,inc}}
+function levelName(l){return ['Dorp','Groeiend dorp','Groot dorp','Kleine stad','Stad'][Math.min(l-1,4)]}
+function currentLevel(){let t=totals();return 1+Math.floor(Math.min(4,Math.max(t.pop/100, xp/150)))} 
+function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').classList.remove('show'),2300)}
+function setNews(msg){$('news').textContent=msg}
+function updateHUD(){let t=totals();level=currentLevel();$('money').textContent=fmt(money);$('income').textContent=fmt(t.inc)+'/s';$('population').textContent=t.pop.toLocaleString('nl-NL');$('level').textContent=level+' · '+levelName(level);$('happiness').innerHTML='<b>'+(happiness>=80?'😄':happiness>=60?'😊':happiness>=40?'😐':'😟')+' Tevredenheid: '+Math.round(happiness)+'%</b>';updateWishes()}
+function renderTabs(){$('tabs').innerHTML='';categories.forEach(c=>{let b=document.createElement('button');b.className='tab'+(category===c?' active':'');b.textContent=c;b.onclick=()=>{category=c;renderTabs();renderBuildings()};$('tabs').appendChild(b)})}
+function renderBuildings(){$('buildingList').innerHTML='';catalog.filter(d=>d.cat===category).forEach(d=>{let el=document.createElement('button');el.className='building';el.innerHTML=`<span class="emoji">${d.emoji}</span><span class="binfo"><strong>${d.name}</strong><small>${d.pop?d.pop+' inw. · ':''}${d.inc?'€ '+d.inc+'/s':'Voorziening'} · ${d.id==='road'?'Past overal':'1 vakje'}</small></span><span class="price">${fmt(d.cost)}</span>`;el.onclick=()=>{if(demolishMode)setDemolishMode(false);selectedType=d.id;placing=true;$('buildHelp').innerHTML=`<b>${d.emoji} ${d.name}</b><br>${d.desc}<br><br>Prijs: ${fmt(d.cost)}<br><span style="color:#2e7654;font-weight:800">Klik op een vakje op de kaart om te bouwen.</span>`;toast('Klik op een vakje om '+d.name.toLowerCase()+' te bouwen.');if(innerWidth<760)$('buildPanel').classList.remove('open')};$('buildingList').appendChild(el)})}
+const WISH_STATE={CLAIMED:'CLAIMED',NOT_MET:'NOT_MET',CLAIMABLE:'CLAIMABLE'};
+function getWishes(){let countWoningen=buildings.filter(b=>['cottage','family','flat'].includes(b.type)).length;return[{id:'homes',name:'Meer woningen',desc:'Bouw 3 woningen',need:3,have:countWoningen,reward:1000},{id:'green',name:'Behoefte aan groen',desc:'Plaats 2 stadsparken',need:2,have:buildings.filter(b=>b.type==='park').length,reward:1200},{id:'shops',name:'Winkelvoorziening',desc:'Bouw een supermarkt of restaurant',need:1,have:buildings.filter(b=>['supermarket','restaurant'].includes(b.type)).length,reward:1500},{id:'roadnet',name:'Ontsluiting',desc:'Plaats 5 wegen',need:5,have:buildings.filter(b=>b.type==='road').length,reward:600}]}
+function updateWishes(){$('wishes').innerHTML='';let wishes=getWishes();wishes.forEach(w=>{let done=w.have>=w.need;let state=done?(localStorage.getItem('wish_'+w.id)?WISH_STATE.CLAIMED:WISH_STATE.CLAIMABLE):WISH_STATE.NOT_MET;let el=document.createElement('div');el.className='wish';el.innerHTML=`<div class="wishhead"><span>${done?'✅':'🎯'} ${w.name}</span><span>${Math.min(w.have,w.need)}/${w.need}</span></div><small>${w.desc}</small><div class="progress"><span style="width:${Math.min(100,w.have/w.need*100)}%"></span></div>${state===WISH_STATE.CLAIMABLE?'<button class="action primary" style="margin-top:7px;width:100%" data-claim="'+w.id+'">Claim ${fmt(w.reward)} & 50 XP</button>':''}${state===WISH_STATE.CLAIMED?'<small style="display:block;margin-top:4px;color:#75b96b">🎁 Beloning al opgehaald</small>':''}`;$('wishes').appendChild(el)});$('wishes').querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>claimReward(b.dataset.claim))}
+function claimReward(wishId){let wish=getWishes().find(w=>w.id===wishId);if(localStorage.getItem('wish_'+wishId))return;money+=wish.reward;xp+=50;localStorage.setItem('wish_'+wishId,'1');toast(`🎯 Doel voltooid: +${fmt(wish.reward)} en 50 XP!`);setNews(`Nieuwe beloning voor '${wish.name}' ontvangen.`);updateHUD()}
+function setDemolishMode(on){demolishMode=on;selectedType=null;placing=false;demolishMode?$('buildPanel').classList.remove('open'):'';$('demolishModeBtn').textContent=demolishMode?'🧼 Slopen: ON':'🧹 Slopen: OFF';$('demolishModeBtn').classList.toggle('danger',demolishMode);$('gameCanvas').classList.toggle('demolish-cursor',demolishMode);demolishMode?toast('Sloopmodus: Klik op een gebouw om het voor 50% terug te verkopen.'):toast('Sloopmodus uit.');demolishMode?$('toggleBuild').classList.add('hidden'):$('toggleBuild').classList.remove('hidden')}
+function hideInspect(){$('inspect').style.display='none';selectedObject=null}
+function inspect(b){if(demolishMode||selectedType||placing)return;selectedObject=b;let d=catalog.find(a=>a.id===b.type);$('inspect').style.display='block';let actions='';if(b.type==='flat')actions+=`<button class="action primary" id="upgradeFlat">⬆️ Verdieping kopen · ${fmt(1500*Math.pow(1.3,b.floors-2))}</button>`;actions+=`<button class="action danger" id="demolishBtn">🧼 Verwijder (${fmt(Math.floor(d.cost/2))})</button><button class="action" id="closeInspect">Sluiten</button>`;$('inspect').innerHTML=`<h3>${d.emoji} ${d.name}${b.type==='flat'?' · Level '+b.floors:''}</h3><p>${d.desc} · Locatie: ${b.x},${b.z}</p><div class="inspect-actions">${actions}</div>`;$('closeInspect').onclick=hideInspect;$('demolishBtn').onclick=()=>{$('inspect').style.display='none';money+=Math.floor(d.cost/2);removeBuilding(b);setNews(`Je hebt ${d.name.toLowerCase()} afgebroken.`);toast(`${d.name} verwijderd. Kreeg ${fmt(Math.floor(d.cost/2))} terug.`);updateHUD()};if($('upgradeFlat'))$('upgradeFlat').onclick=()=>{let cost=1500*Math.pow(1.3,b.floors-2);if(money<cost){toast('Niet genoeg geld!');return}money-=cost;b.floors++;rebuildBuilding(b);xp+=25;inspect(b);updateHUD()}}
+const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();function pick(e){const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);let hits=raycaster.intersectObjects(world.children,true);for(let h of hits){let o=h.object;while(o&&o.parent!==world)o=o.parent;if(o&&o.userData&&o.userData.type){let b=buildings.find(x=>x.id===o.userData.buildingId);if(b)return b}}return null}
+function groundPick(e){const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);let hits=raycaster.intersectObject(ground);if(hits.length){let p=hits[0].point;return {x:Math.floor(p.x+gridSize)-gridSize+.5,z:Math.floor(p.z+gridSize)-gridSize+.5}}return null}
+let target={x:0,z:0},camAngle=Math.PI/3,camDistance=38,camHeight=28,drag=null, moved=false;
+function updateCamera(){camera.position.set(target.x+Math.sin(camAngle)*camDistance,camHeight,target.z+Math.cos(camAngle)*camDistance);camera.lookAt(target.x,0,target.z)}updateCamera();
+renderer.domElement.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,px:e.clientX,py:e.clientY,button:e.button};moved=false;renderer.domElement.setPointerCapture(e.pointerId)});
+renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-drag.px,dy=e.clientY-drag.py;if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>5)moved=true;if(moved){if(drag.button===0||e.pointerType==='touch'){let s=camDistance*.002;target.x-=dx*Math.cos(camAngle)*s+dy*Math.sin(camAngle)*s;target.z+=dx*Math.sin(camAngle)*s-dy*Math.cos(camAngle)*s}else if(drag.button===2||(e.pointerType==='touch'&&drag.count==2))camAngle+=dx*.006}drag.px=e.clientX;drag.py=e.clientY;updateCamera()});
+renderer.domElement.addEventListener('pointerup',e=>{if(!drag)return;let wasMoved=moved;drag=null;if(wasMoved)return;hideInspect();let p=groundPick(e);if(!p)return;if(p.x>gridSize||p.x<-gridSize||p.z>gridSize||p.z<-gridSize)return;let bNear=buildings.some(b=>Math.abs(b.x-p.x)<.6&&Math.abs(b.z-p.z)<.6);let bAt=pick(e);if(demolishMode){if(bAt){let d=catalog.find(a=>a.id===bAt.type);money+=Math.floor(d.cost/2);removeBuilding(bAt);toast(`${d.name} verwijderd. Kreeg ${fmt(Math.floor(d.cost/2))} terug.`);updateHUD()}else toast('Klik op een gebouw om het te verwijderen.');setDemolishMode(false);return}if(placing&&selectedType){if(bNear){toast('Hier staat al een gebouw!');return}let d=catalog.find(a=>a.id===selectedType);if(money<d.cost){toast('Niet genoeg geld!');placing=false;selectedType=null;return}money-=d.cost;addBuilding(selectedType,p.x,p.z);xp+=d.cost/100;setNews(`${d.name} gebouwd!`);toast(`${d.name} gebouwd.`);placing=false;selectedType=null;updateHUD()}else if(bAt)inspect(bAt);});
+renderer.domElement.addEventListener('wheel',e=>{camDistance=clamp(camDistance+e.deltaY*.03,15,65);updateCamera()});
+renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
+$('toggleBuild').onclick=()=>{let open=$('buildPanel').classList.toggle('open');$('toggleBuild').textContent=open?'❮':'❯'};
+$('cameraHome').onclick=()=>{target.x=0;target.z=0;camAngle=Math.PI/3;camDistance=38;camHeight=28;updateCamera();toast('Camera terug')};$('startGame').onclick=()=>$('overlay').style.display='none';$('demolishModeBtn').onclick=()=>setDemolishMode(!demolishMode);
+function tick(now){requestAnimationFrame(tick);let dt=Math.min(.05,(now-lastTime)/1000||0);lastTime=now;elapsed+=dt;dayPhase=(dayPhase+dt*.006)%1;let t=totals();money+=t.inc*dt;sun.position.set(Math.cos(dayPhase*Math.PI*2)*30, 35, Math.sin(dayPhase*Math.PI*2)*24);updateHUD();renderer.render(scene,camera)}
+localStorage.clear(); sessionStorage.clear(); // Ensure clean state for preview
+renderTabs();renderBuildings();updateHUD();if(!sessionStorage.getItem('cc_intro_seen')){$('overlay').style.display='flex';sessionStorage.setItem('cc_intro_seen','1')}requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
